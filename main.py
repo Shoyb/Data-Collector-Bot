@@ -74,15 +74,15 @@ async def on_message(message):
         await message.channel.send(quote)
     if any(word in message.content for word in sad_words):
         await message.channel.send(random.choice(starter_encouragement))
-    if msg.startswith('!data save '):
-        text_to_save = message.content[len('!data save '):]
+    if msg.startswith('data save '):
+        text_to_save = message.content[len('data save '):]
         cursor.execute("""
         INSERT INTO user_data (user_id, saved_text)
         VALUES (?, ?)
         """, (message.author.id, text_to_save))
         conn.commit()
         await message.channel.send('Your data has been saved!')
-    elif msg.startswith('!data get list'):
+    elif msg.startswith('data get list'):
             cursor.execute("SELECT user_id, saved_text FROM user_data")
             results = cursor.fetchall()
             if results:
@@ -92,7 +92,7 @@ async def on_message(message):
                 await message.channel.send(f"All saved data:\n{formatted}")
             else:
                 await message.channel.send("No data saved yet.")
-    elif msg.startswith('!data get'):
+    elif msg.startswith('data get'):
         cursor.execute(
         "SELECT saved_text FROM user_data WHERE user_id = ?",
         (message.author.id,))
@@ -102,4 +102,54 @@ async def on_message(message):
             await message.channel.send(f"Your saved data:\n{user_texts}")
         else:
             await message.channel.send("You have no saved data.")
+    elif msg.startswith("data meaning"):
+        parts = msg.split(" ", 2)
+
+        if len(parts) < 3:
+            await message.channel.send("Please provide a word.")
+            return
+
+        word = parts[2].strip().lower()
+
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            await message.channel.send("No meaning found.")
+            return
+
+        data = response.json()
+
+        if not isinstance(data, list):
+            await message.channel.send("No meaning found.")
+            return
+
+        embed = discord.Embed(
+            title=word.capitalize(),
+            color=discord.Color.blue()
+        )
+
+        meanings = data[0].get("meanings", [])
+
+        for item in meanings:
+            part_of_speech = item.get("partOfSpeech", "Unknown")
+            definitions = item.get("definitions", [])
+
+            formatted = ""
+            for i, definition_obj in enumerate(definitions[:5], 1):
+                definition = definition_obj.get("definition", "")
+                formatted += f"{i}. {definition}\n"
+
+            if formatted:
+                embed.add_field(
+                    name=part_of_speech,
+                    value=formatted,
+                    inline=False
+                )
+
+        if embed.fields:
+            await message.channel.send(embed=embed)
+        else:
+            await message.channel.send("No meaning found.")
+
 client.run(DISCORD_TOKEN)

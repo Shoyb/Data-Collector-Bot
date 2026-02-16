@@ -1,10 +1,7 @@
-import requests
-import json
+from PyDictionary import PyDictionary
 
-def get_quote():
-    response = requests.get("https://zenquotes.io/api/random")
-    json_data = json.loads(response.text)
-    quote = json_data[0]['q'] + " -" + json_data[0]['a']
-    return quote
+dictionary = PyDictionary()
 
-print(get_quote())
+print(dictionary.meaning("indentation"))
+print(dictionary.meaning("apple"))
+print(dictionary.meaning("house"))
