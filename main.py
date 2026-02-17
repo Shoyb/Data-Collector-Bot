@@ -70,6 +70,8 @@ async def on_message(message):
         await message.channel.send('shuckle shuckle shuckle')
     elif message.content.startswith('I love Shoyb'):
         await message.channel.send('I love you too')
+    elif message.content == 'A topper spotted':
+        await message.channel.send('Pulak, The topper has been spotted, RUN!')
     elif message.content.startswith('quote'):
         quote = get_quote()
         await message.channel.send(quote)
