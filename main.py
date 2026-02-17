@@ -8,6 +8,7 @@ import random
 import sqlite3
 from dotenv import load_dotenv
 import os
+from waifu import WaifuAioClient
 
 conn = sqlite3.connect("database.db")
 cursor = conn.cursor()
@@ -151,5 +152,15 @@ async def on_message(message):
             await message.channel.send(embed=embed)
         else:
             await message.channel.send("No meaning found.")
+    if msg == 'data waifu':
+        async with WaifuAioClient() as waifu_client:
+            img_url = await waifu_client.sfw(category= 'waifu')
+            
+            embed = discord.Embed(
+                title= "Here's your waifu!",
+                color = discord.Color.random()
+            )
+            embed.set_image(url= img_url)
+            await message.channel.send(embed = embed)
 
 client.run(DISCORD_TOKEN)

@@ -1,7 +1,5 @@
-from PyDictionary import PyDictionary
+from waifu import WaifuClient
 
-dictionary = PyDictionary()
-
-print(dictionary.meaning("indentation"))
-print(dictionary.meaning("apple"))
-print(dictionary.meaning("house"))
+client = WaifuClient()
+img = client.sfw(category= 'waifu')
+print(img)
