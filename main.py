@@ -4,6 +4,7 @@ import requests
 import json
 from words import sad_words
 from words import starter_encouragement
+from words import swear_words
 import random
 import sqlite3
 from dotenv import load_dotenv
@@ -71,6 +72,8 @@ async def on_message(message):
         await message.channel.send('I love you too')
     elif message.content == 'A topper spotted':
         await message.channel.send('Pulak, The topper has been spotted, RUN!')
+    elif msg.startswith('data curse'):
+        await message.channel.send(random.choice(swear_words))
     elif message.content.startswith('quote'):
         quote = get_quote()
         await message.channel.send(quote)

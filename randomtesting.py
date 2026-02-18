@@ -1,8 +1,6 @@
 import requests
-
-response = requests.get(
-    "https://api.waifu.im/images",
-    params={"IncludedTags": "waifu"}
-)
+import json
+url = "https://api.animechan.io/v1/quotes/random"
+response = requests.get(url)
 data = response.json()
-print(data["items"][0]["url"])
+print(data)
