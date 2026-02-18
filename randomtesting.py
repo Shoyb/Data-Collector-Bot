@@ -1,5 +1,8 @@
-from waifu import WaifuClient
+import requests
 
-client = WaifuClient()
-img = client.sfw(category= 'waifu')
-print(img)
+response = requests.get(
+    "https://api.waifu.im/images",
+    params={"IncludedTags": "waifu"}
+)
+data = response.json()
+print(data["items"][0]["url"])
