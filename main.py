@@ -166,5 +166,11 @@ async def on_message(message):
             )
             embed.set_image(url= img_url)
             await message.channel.send(embed = embed)
-
+    elif msg == 'data meme':
+        content = requests.get("https://meme-api.com/gimme").text
+        data = json.loads(content)
+        embed = discord.Embed(
+            title=f"{data['title']}", 
+            color=discord.Colour.random()).set_image(url=f"{data['url']}")
+        await message.channel.send(embed=embed)
 client.run(DISCORD_TOKEN)

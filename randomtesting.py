@@ -1,6 +1,5 @@
 import requests
 import json
-url = "https://api.animechan.io/v1/quotes/random"
+url = "https://api.apileague.com/retrieve-random-meme"
 response = requests.get(url)
-data = response.json()
-print(data)
+print(response.json())  
