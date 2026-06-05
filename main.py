@@ -1,176 +1,105 @@
-from email.mime import message
+"""
+Data Collector Bot - Main Entry Point
+A modular Discord bot for data collection, quotes, and LLM integration.
+"""
 import discord
-import requests
-import json
-from words import sad_words
-from words import starter_encouragement
-from words import swear_words
-import random
-import sqlite3
-from dotenv import load_dotenv
-import os
-
-conn = sqlite3.connect("database.db")
-cursor = conn.cursor()
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS user_data (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    saved_text TEXT
-)
-""")
-conn.commit()
+from discord.ext import commands
+from config import DISCORD_TOKEN, COMMAND_PREFIX
+from handlers.commands import process_commands
+from handlers.events import process_events
+from handlers.transformers import process_transformer_commands
+from core.database import db_manager
+from core.llm import llm_manager
 
 
-load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-
-def get_quote():
-    response = requests.get("https://zenquotes.io/api/random")
-    json_data = json.loads(response.text)
-    quote = json_data[0]['q'] + " -" + json_data[0]['a']
-    return quote
-def get_saved_data(user_id):
-        cursor.execute("SELECT saved_text FROM user_data WHERE user_id = ?", (user_id,))
-        result = cursor.fetchone()
-        if result:
-            return result[0]
-        else:
-            return None
-def get_data_list():
-    cursor.execute("SELECT user_id, saved_text FROM user_data")
-    return cursor.fetchall()
-        
-    
+# Bot setup
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
-@client.event
+bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
+
+
+@bot.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
+    """Called when bot successfully connects to Discord."""
+    print(f'Bot ready as {bot.user}')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
+
+@bot.event
+async def on_message(message: discord.Message):
+    """
+    Handle incoming messages.
+    
+    Args:
+        message: Discord message object
+    """
+    # Ignore bot's own messages
+    if message.author == bot.user:
         return
-    msg = message.content.lower()
-    if message.content.startswith('!hello'):
-        await message.channel.send('Hello!')
-    elif message.content.startswith('Pulak'):
-        await message.channel.send('Diddy Pulak is GAY')
-    elif message.content.startswith('awsaf'):
-        await message.channel.send('awsaf is Pedo')
-    elif message.content.startswith('toppers'):
-        await message.channel.send('Pulak and Asfia are toppers')
-    elif message.content.startswith('ray'):
-        await message.channel.send('HIPPO')
-    elif message.content.startswith('mimu'):
-        await message.channel.send('Mimu is my waifu, We are so similar.')
-    elif message.content.startswith('shuckle'):
-        await message.channel.send('shuckle shuckle shuckle')
-    elif message.content.startswith('I love Shoyb'):
-        await message.channel.send('I love you too')
-    elif message.content == 'A topper spotted':
-        await message.channel.send('Pulak, The topper has been spotted, RUN!')
-    elif msg.startswith('data curse'):
-        await message.channel.send(random.choice(swear_words))
-    elif message.content.startswith('quote'):
-        quote = get_quote()
-        await message.channel.send(quote)
-    if any(word in message.content for word in sad_words):
-        await message.channel.send(random.choice(starter_encouragement))
-    if msg.startswith('data save '):
-        text_to_save = message.content[len('data save '):]
-        cursor.execute("""
-        INSERT INTO user_data (user_id, saved_text)
-        VALUES (?, ?)
-        """, (message.author.id, text_to_save))
-        conn.commit()
-        await message.channel.send('Your data has been saved!')
-    elif msg.startswith('data get list'):
-            cursor.execute("SELECT user_id, saved_text FROM user_data")
-            results = cursor.fetchall()
-            if results:
-                formatted = "\n".join(
-                    [f"User {user_id}: {text}" for user_id, text in results]
-                )
-                await message.channel.send(f"All saved data:\n{formatted}")
-            else:
-                await message.channel.send("No data saved yet.")
-    elif msg.startswith('data get'):
-        cursor.execute(
-        "SELECT saved_text FROM user_data WHERE user_id = ?",
-        (message.author.id,))
-        results = cursor.fetchall()
-        if results:
-            user_texts = "\n".join([row[0] for row in results])
-            await message.channel.send(f"Your saved data:\n{user_texts}")
-        else:
-            await message.channel.send("You have no saved data.")
-    elif msg.startswith("data meaning"):
-        parts = msg.split(" ", 2)
+    
+    # Process commands and events
+    await process_commands(message)
+    await process_events(message)
+    await process_transformer_commands(message)
+    
+    # Process bot commands (for extensibility)
+    await bot.process_commands(message)
 
-        if len(parts) < 3:
-            await message.channel.send("Please provide a word.")
-            return
 
-        word = parts[2].strip().lower()
-
-        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-        response = requests.get(url)
-
-        if response.status_code != 200:
-            await message.channel.send("No meaning found.")
-            return
-
-        data = response.json()
-
-        if not isinstance(data, list):
-            await message.channel.send("No meaning found.")
-            return
-
-        embed = discord.Embed(
-            title=word.capitalize(),
-            color=discord.Color.blue()
+@bot.command(name="ask")
+async def ask(ctx: commands.Context, *, raw: str):
+    """
+    Ask Qwen LLM a question.
+    
+    Usage:
+        !ask What is the capital of France?
+        !ask --tokens 512 --temp 0.9 Explain quantum computing
+    
+    Note: Start the LLM server first with: !data llm start
+    """
+    # Check if LLM server is running
+    if llm_manager.llama_process is None:
+        await ctx.send(
+            "❌ LLM server is not running!\n\n"
+            "Start it with: `!data llm start`"
         )
-
-        meanings = data[0].get("meanings", [])
-
-        for item in meanings:
-            part_of_speech = item.get("partOfSpeech", "Unknown")
-            definitions = item.get("definitions", [])
-
-            formatted = ""
-            for i, definition_obj in enumerate(definitions[:5], 1):
-                definition = definition_obj.get("definition", "")
-                formatted += f"{i}. {definition}\n"
-
-            if formatted:
-                embed.add_field(
-                    name=part_of_speech,
-                    value=formatted,
-                    inline=False
-                )
-
-        if embed.fields:
-            await message.channel.send(embed=embed)
-        else:
-            await message.channel.send("No meaning found.")
-    if msg == 'data waifu':
-            waifu_response = requests.get("https://api.waifu.im/images")
-            img_url = waifu_response.json()["items"][0]["url"]
-            
-            embed = discord.Embed(
-                title= "Here's your waifu!",
-                color = discord.Color.random()
+        return
+    
+    try:
+        question, max_tokens, temperature = llm_manager.parse_args(raw)
+        
+        tok_display = max_tokens if max_tokens is not None else 4096
+        temp_display = temperature if temperature is not None else 0.7
+        
+        msg = await ctx.send(
+            f"⏳ **Generating...** `0.0s`\n"
+            f"-# Using `Qwen3.5-0.8B` · max_tokens=`{tok_display}` · temp=`{temp_display}`"
+        )
+        
+        try:
+            # Run LLM query in executor to avoid blocking
+            answer, reasoning, stats = await bot.loop.run_in_executor(
+                None, llm_manager.ask_qwen, question, max_tokens, temperature
             )
-            embed.set_image(url= img_url)
-            await message.channel.send(embed = embed)
-    elif msg == 'data meme':
-        content = requests.get("https://meme-api.com/gimme").text
-        data = json.loads(content)
-        embed = discord.Embed(
-            title=f"{data['title']}", 
-            color=discord.Colour.random()).set_image(url=f"{data['url']}")
-        await message.channel.send(embed=embed)
-client.run(DISCORD_TOKEN)
+            
+            response = f"**Answer:** {answer}\n\n**Stats:** {stats['elapsed']:.2f}s"
+            if reasoning:
+                response += f"\n**Reasoning:** {reasoning}"
+            
+            await msg.edit(content=response)
+        except Exception as e:
+            await msg.edit(content=f"❌ Error: {str(e)}")
+    except Exception as e:
+        await ctx.send(f"❌ Command error: {str(e)}")
+
+
+def main():
+    """Start the bot."""
+    if not DISCORD_TOKEN:
+        raise ValueError("DISCORD_TOKEN not found in environment variables!")
+    
+    print("Starting Data Collector Bot...")
+    bot.run(DISCORD_TOKEN)
+
+
+if __name__ == "__main__":
+    main()
