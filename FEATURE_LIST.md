@@ -14,6 +14,11 @@
 
 - `!guess` - Number guessing game from 1 to 100
 - `!guess <max_number>` - Number guessing game with a custom upper limit
+- `!mental` - Timed 5-round mental math challenge
+- `!mental <rounds>` - Timed mental math challenge with a custom number of rounds
+- `!mental <difficulty>` - Timed mental math challenge using easy, medium, or hard
+- `!mental <rounds> <difficulty>` - Timed mental math challenge with custom rounds and difficulty
+- `!connect4` or `!c4` - Play Connect Four against the bot using moves like A, D4, or G6
 - `data rock` - Rock paper scissors using rock
 - `data paper` - Rock paper scissors using paper
 - `data scissor` / `data scissors` - Rock paper scissors using scissors
@@ -94,6 +99,8 @@ python main.py
 !hello
 !quote
 !guess 50
+!mental 10 hard
+!connect4
 data rock
 data sqrt(81)
 data poly x^2 - 5x + 6
@@ -167,4 +174,4 @@ Recommended:
 ## Status
 
 Last updated: June 10, 2026
-Version: 2.1 - Games and math tools
+Version: 2.3 - Connect Four
