@@ -8,7 +8,8 @@ import discord
 from core.database import db_manager
 from core.api import api_manager
 from core.llm import llm_manager
-from utils.constants import CUSTOM_RESPONSES, SWEAR_WORDS
+from utils.constants import CUSTOM_RESPONSES
+from words import swear_words
 
 
 class CommandHandler:
@@ -121,7 +122,7 @@ class CommandHandler:
         """Handle data curse command."""
         msg = message.content.lower()
         if msg.startswith('data curse'):
-            curse = random.choice(SWEAR_WORDS) if SWEAR_WORDS else "No curses available!"
+            curse = random.choice(swear_words) if swear_words else "No curses available!"
             await message.channel.send(curse)
             return True
         return False
