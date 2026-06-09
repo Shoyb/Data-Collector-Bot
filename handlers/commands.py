@@ -5,7 +5,6 @@ Processes user commands from Discord messages.
 import random
 import requests
 import discord
-from core.database import db_manager
 from core.api import api_manager
 from core.llm import llm_manager
 from utils.constants import CUSTOM_RESPONSES
@@ -88,36 +87,6 @@ class CommandHandler:
         return False
     
     @staticmethod
-    async def handle_data_save(message: discord.Message) -> bool:
-        """Handle data save command."""
-        msg = message.content.lower()
-        if msg.startswith('data save '):
-            text_to_save = message.content[len('data save '):]
-            success = db_manager.save_user_data(message.author.id, text_to_save)
-            if success:
-                await message.channel.send('Your data has been saved!')
-            else:
-                await message.channel.send('Failed to save data.')
-            return True
-        return False
-    
-    @staticmethod
-    async def handle_data_get_list(message: discord.Message) -> bool:
-        """Handle data get list command."""
-        msg = message.content.lower()
-        if msg.startswith('data get list'):
-            results = db_manager.get_all_user_data()
-            if results:
-                formatted = "\n".join(
-                    [f"User {user_id}: {text}" for user_id, text in results]
-                )
-                await message.channel.send(f"All saved data:\n{formatted}")
-            else:
-                await message.channel.send("No data saved yet.")
-            return True
-        return False
-    
-    @staticmethod
     async def handle_data_curse(message: discord.Message) -> bool:
         """Handle data curse command."""
         msg = message.content.lower()
@@ -176,8 +145,6 @@ async def process_commands(message: discord.Message) -> bool:
     handlers = [
         CommandHandler.handle_hello,
         CommandHandler.handle_quote,
-        CommandHandler.handle_data_save,
-        CommandHandler.handle_data_get_list,
         CommandHandler.handle_data_curse,
         CommandHandler.handle_data_meme,
         CommandHandler.handle_data_waifu,

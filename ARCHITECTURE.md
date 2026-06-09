@@ -1,253 +1,215 @@
-# Architecture Overview
+﻿# Architecture Overview
 
 ## Module Dependency Graph
 
-```
+```text
 main.py
-├── config.py                    (configuration constants)
-├── discord                      (external library)
-├── handlers/
-│   ├── commands.py
-│   │   ├── core/database.py
-│   │   ├── core/api.py
-│   │   └── utils/constants.py
-│   └── events.py
-│       └── utils/constants.py
-└── core/
-    ├── database.py              (sqlite3)
-    ├── api.py                   (requests)
-    └── llm.py                   (requests, subprocess)
+|-- config.py
+|-- discord
+|-- handlers/
+|   |-- calculator.py
+|   |   `-- math / ast
+|   |-- commands.py
+|   |   |-- core/api.py
+|   |   |-- core/llm.py
+|   |   `-- utils/constants.py
+|   |-- events.py
+|   |   `-- utils/constants.py
+|   |-- games.py
+|   |-- plotter.py
+|   |   |-- handlers/calculator.py
+|   |   |-- sympy
+|   |   |-- numpy
+|   |   `-- matplotlib
+|   |-- polynomial.py
+|   |   `-- sympy
+|   `-- transformers.py
+|       `-- core/transformers_nlp.py
+`-- core/
+    |-- api.py
+    `-- llm.py
 ```
 
 ## Module Descriptions
 
-### **config.py** (Central Configuration)
-- Single source of truth for all settings
-- Discord token, database name, API URLs
-- LLM parameters, server paths
-- Easy to switch between dev/prod configs
+### `config.py`
 
-### **core/database.py** (Data Persistence)
-- `DatabaseManager` class for SQLite operations
-- Methods: save, retrieve, list user data
-- Handles connection lifecycle
-- Future-proof: Can add migrations, backups
+Single source of truth for configuration such as Discord token, command prefix, API URLs, and LLM settings.
 
-### **core/api.py** (External Integrations)
-- `APIManager` class for HTTP API calls
-- Methods: get quotes, get memes
-- Error handling and timeouts
-- Easy to add new APIs (weather, etc.)
+### `core/api.py`
 
-### **core/llm.py** (AI Integration)
-- `LLMManager` class for llama.cpp server
-- Server lifecycle: start, wait, stop
-- Qwen model inference with streaming
-- Parameter parsing for commands
+External API integrations through `APIManager`:
 
-### **handlers/commands.py** (Message Commands)
-- `CommandHandler` class with static methods
-- Each command = separate method
-- `process_commands()` dispatcher
-- Returns bool: command handled or not
+- Quotes
+- Memes
 
-### **handlers/events.py** (Message Events)
-- `EventHandler` class for non-command events
-- Sad word detection → encouragement response
-- `process_events()` dispatcher
-- Easy to add more reactive behaviors
+### `core/llm.py`
 
-### **utils/constants.py** (Reusable Data)
-- `SAD_WORDS` list
-- `ENCOURAGEMENT_MESSAGES` list
-- `CUSTOM_RESPONSES` dict
-- `SWEAR_WORDS` list (extensible)
+LLM integration through `LLMManager`:
 
-### **main.py** (Orchestration)
-- Discord bot setup with intents
-- `on_ready()` event handler
-- `on_message()` dispatcher to handlers
-- `@ask` command for LLM
-- Clean 95-line entry point
+- Server lifecycle management
+- Qwen inference
+- Argument parsing for `!ask`
+
+### `handlers.commands`
+
+General manual command handlers such as greetings, quotes, memes, waifu images, curse words, custom responses, and LLM start/stop commands.
+
+### `handlers.events`
+
+Reactive non-command behavior, including sad word detection and encouragement responses.
+
+### `handlers.games`
+
+Game features:
+
+- `setup_game_commands(bot)` registers `!guess`
+- `process_game_commands(message)` handles `data rock`, `data paper`, and `data scissors`
+
+### `handlers.calculator`
+
+Safe calculator for messages like `data 5+3` and `data sqrt(25)`. It uses Python AST parsing with an allowlist of operators and math functions instead of raw `eval`.
+
+### `handlers.polynomial`
+
+Polynomial root solving for `x` using SymPy. Supports expressions and equations, such as `data poly x^2 - 5x + 6` and `data solve 2x^2 - 8 = 0`.
+
+### `handlers.plotter`
+
+Function plotting using SymPy parsing, NumPy sampling, and Matplotlib PNG rendering. Supports commands such as `data plot sin(x) from -2*pi to 2*pi`.
+
+### `handlers.transformers`
+
+Manual transformer NLP command routing for summarization, classification, and mask filling.
+
+### `utils/constants.py`
+
+Reusable word lists and custom response data.
+
+### `main.py`
+
+Orchestration layer:
+
+- Discord bot setup
+- `on_ready()` event
+- `on_message()` dispatcher chain
+- `!ask` command
+- Game command registration
+
+## Dispatcher Order
+
+Manual handlers run in this order:
+
+1. `process_commands(message)`
+2. `process_transformer_commands(message)`
+3. `process_plot_commands(message)`
+4. `process_polynomial_commands(message)`
+5. `process_calculator_commands(message)`
+6. `process_game_commands(message)`
+7. `process_events(message)`
+8. `bot.process_commands(message)` if no manual handler matched
+
+The order matters. More specific `data plot` and `data poly` commands run before the calculator because they also contain math-looking text.
 
 ## Design Patterns Used
 
-### 1. **Manager Pattern**
-Each core responsibility has a manager class:
-- DatabaseManager
-- APIManager  
-- LLMManager
+### Manager Pattern
 
-Benefits:
-- Centralized state management
-- Easy to test (mock managers)
-- Can add caching, logging later
+Core services such as API and LLM behavior are managed through singleton-style managers.
 
-### 2. **Handler Pattern**
-Command and event handlers are static methods:
-- `CommandHandler.handle_hello()`
-- `EventHandler.handle_sad_words()`
+### Handler Pattern
 
-Benefits:
-- Stateless and testable
-- Easy to add/remove handlers
-- Clear handler chain
+Each feature area owns its message processing. Handlers return `True` when they handled a message so the dispatcher can stop cleanly.
 
-### 3. **Dispatcher Pattern**
-`process_commands()` and `process_events()` dispatch to handlers:
-- Iterate through handlers list
-- Stop on first match (commands)
-- Process all (events)
+### Focused Module Pattern
 
-Benefits:
-- Extensible without touching main.py
-- Order-independent (mostly)
-- Clear flow control
+Larger features are split into focused files:
 
-### 4. **Configuration Pattern**
-`config.py` centralizes all magic numbers:
-- No hardcoded values in handlers
-- Easy feature flags
-- Environment override support
-
-Benefits:
-- Single change point for settings
-- Easy A/B testing
-- Development vs production
+- `games.py` for games
+- `calculator.py` for arithmetic evaluation
+- `polynomial.py` for roots
+- `plotter.py` for function images
 
 ## Data Flow
 
-### Command Processing
-```
-Discord User sends message
-        ↓
-Discord Library routes to on_message()
-        ↓
-main.py extracts message content
-        ↓
-process_commands() iterates handlers
-        ↓
-handlers/commands.py executes handler
-        ↓
-Handler calls core module (db, api, llm)
-        ↓
-core module returns result
-        ↓
-Handler sends Discord message back
-```
-
-### Event Processing
-```
-Discord User sends message
-        ↓
-Discord Library routes to on_message()
-        ↓
-process_events() iterates handlers
-        ↓
-handlers/events.py executes handler
-        ↓
-Handler calls utils/constants for data
-        ↓
-Handler sends Discord message back
+```text
+Discord user sends message
+        |
+Discord library routes to on_message()
+        |
+main.py runs handlers in order
+        |
+First matching handler performs work
+        |
+Handler sends Discord response
 ```
 
 ## Extensibility Points
 
-### Add New Command
-1. Create handler in `handlers/commands.py`
-2. Add to `handlers` list in `process_commands()`
+### Add New Manual Command
 
-### Add New Event
-1. Create handler in `handlers/events.py`
-2. Call in `process_events()`
+1. Add a handler function returning `bool`.
+2. Wire it into `main.py` in the correct order.
+3. Keep broad matchers later than specific matchers.
+
+### Add New Prefixed Command
+
+1. Register with `@bot.command` directly or through a setup function.
+2. Call the setup function after bot creation in `main.py`.
 
 ### Add New API
-1. Add method to `core/api.py`
-2. Use in handlers
 
-### Add New Database Table
-1. Add CREATE TABLE to `_initialize_tables()` in `core/database.py`
-2. Add methods to `DatabaseManager`
-
-### Add New Configuration
-1. Add to `config.py`
-2. Import and use where needed
+1. Add a method to `core/api.py`.
+2. Use the API manager from a handler.
 
 ## Error Handling
 
 Current approach:
-- API failures: Return None, graceful error messages
-- Database errors: Print to console, return empty results
-- LLM errors: Send error message to user
+
+- API failures return graceful messages
+- LLM failures are sent back to the user
+- Calculator uses a safe allowlist parser
+- Polynomial and plot inputs are restricted before SymPy parsing
+- Plotting uses Matplotlib's non-GUI `Agg` backend
 
 Future improvements:
-- Add logging module
-- Add error recovery
-- Add retry logic
+
+- Add structured logging
+- Add per-user rate limiting
 - Add monitoring/alerts
-
-## Testing Strategy
-
-Current structure allows:
-- **Unit tests**: Test managers in isolation (no Discord)
-- **Integration tests**: Test handlers with mock Discord
-- **End-to-end tests**: Run actual bot in test server
-
-Example test:
-```python
-def test_get_quote():
-    quote = api_manager.get_random_quote()
-    assert quote is not None
-    assert "-" in quote  # Format check
-```
-
-## Performance Considerations
-
-Current optimizations:
-- Async/await for non-blocking I/O
-- Executor pool for blocking LLM queries
-- Timeout handling on API calls
-
-Future optimizations:
-- Cache quotes/memes
-- Connection pooling for database
-- Rate limiting on commands
-- Message batching
+- Add more unit tests for math handlers
 
 ## Security Considerations
 
-Current status:
-- ✅ No SQL injection (parameterized queries)
-- ✅ Environment variables for secrets
-- ✅ Timeout on API calls
-- ⚠️ No user input validation
-- ⚠️ No rate limiting
-- ⚠️ No permission system
+Implemented:
 
-Recommendations:
-- Add input validation in handlers
-- Add rate limiting (per user)
-- Add permission checks
-- Audit logs for data access
+- Environment variables for secrets
+- Timeout on API calls
+- No raw `eval` for calculator input
+- Restricted parser inputs for polynomial solving and plotting
+
+Recommended:
+
+- Rate limiting
+- Permission checks
+- Audit logs for sensitive commands
 
 ## Documentation
 
-- `README_MODULAR.md` - User guide
-- `MIGRATION_GUIDE.md` - What changed
+- `README.md` - Main user guide
+- `README_MODULAR.md` - Detailed user and module guide
+- `FEATURE_LIST.md` - Complete feature list
+- `DEVELOPER_GUIDE.md` - Developer quick reference
 - `ARCHITECTURE.md` - This file
-- Inline docstrings in each module
 
 ## Maintenance Checklist
 
-Regular tasks:
 - [ ] Update dependencies quarterly
-- [ ] Review error logs monthly
-- [ ] Test LLM functionality weekly
-- [ ] Backup database periodically
+- [ ] Test Discord command flow after handler order changes
+- [ ] Add tests for calculator, polynomial, and plotter modules
 - [ ] Monitor Discord API changes
 
 ---
 
-**Last Updated**: June 2, 2026
-**Status**: ✅ Modular Architecture Implemented
-**Next Phase**: Add logging, monitoring, advanced features
+Last updated: June 10, 2026
+Status: Modular architecture with games and math tools

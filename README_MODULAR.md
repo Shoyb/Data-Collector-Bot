@@ -1,196 +1,149 @@
-# Data Collector Bot
+﻿# Data Collector Bot - Modular Guide
 
-A modular Discord bot for data collection, quotes, encouragement messages, and LLM integration.
+A modular Discord bot for entertainment commands, math tools, quotes, encouragement messages, transformer NLP, and LLM integration.
 
 ## Project Structure
 
-```
+```text
 Data_Collector_Bot/
-├── main.py                 # Entry point - runs the bot
-├── config.py              # Centralized configuration
-├── core/                   # Core functionality modules
-│   ├── __init__.py
-│   ├── database.py        # Database operations (SQLite)
-│   ├── api.py            # External API integrations
-│   └── llm.py            # LLM server management & Qwen inference
-├── handlers/               # Message and event handlers
-│   ├── __init__.py
-│   ├── commands.py       # Command processing
-│   └── events.py         # Event processing
-├── utils/                  # Utility modules
-│   ├── __init__.py
-│   └── constants.py      # Constants and word lists
-├── tests/                  # Test modules
-│   ├── __init__.py
-│   └── test_meme_api.py  # Meme API tests
-├── words.py              # (Legacy) Word lists
-├── gwen.py               # (Legacy) LLM module
-└── README.md
+|-- main.py                  # Entry point and dispatcher wiring
+|-- config.py                # Centralized configuration
+|-- core/
+|   |-- api.py               # External API integrations
+|   |-- llm.py               # LLM server management and Qwen inference
+|   `-- transformers_nlp.py  # Transformer NLP models
+|-- handlers/
+|   |-- calculator.py        # Safe calculator commands
+|   |-- commands.py          # General command processing
+|   |-- events.py            # Reactive event processing
+|   |-- games.py             # Guessing game and rock paper scissors
+|   |-- plotter.py           # Function plotting
+|   |-- polynomial.py        # Polynomial solving
+|   `-- transformers.py      # Transformer command processing
+|-- utils/
+|   `-- constants.py         # Constants and word lists
+|-- tests/
+|   `-- test_meme_api.py     # Meme API tests
+|-- words.py                 # Legacy word lists
+|-- gwen.py                  # Legacy LLM module
+`-- README.md
 ```
 
-## Features
+## Commands
 
-### Commands
-- **`!hello`** - Simple greeting
-- **`!quote`** - Get a random inspirational quote
-- **`!ask <question>`** - Ask Qwen LLM (requires llama.cpp server)
-  - Optional flags: `--tokens <num>` and `--temp <float>`
-- **`data save <text>`** - Save text to database
-- **`data get list`** - Retrieve all saved data
-- **`data curse`** - Get a random curse word
+### General
 
-### Custom Responses
-Predefined responses for specific mentions:
-- Pulak, awsaf, toppers, ray, mimu, shuckle, etc.
+- `!hello` - Simple greeting
+- `!quote` or `quote` - Random inspirational quote
+- `data meme` or `!meme` - Random meme
+- `data waifu` - Random waifu image
+- `data curse` - Random curse word
+- `!ask <question>` - Ask Qwen LLM after the LLM server is running
 
-### Event Handlers
-- Detects sad words and responds with encouragement messages
+### Games
+
+- `!guess` - Guess a number from 1 to 100
+- `!guess 50` - Guess a number from 1 to 50
+- `data rock`, `data paper`, `data scissor`, `data scissors` - Play rock paper scissors
+
+### Math
+
+- `data 5+3` - Calculator expression
+- `data sqrt(25)` - Square root
+- `data 2^8` or `data 2**8` - Power
+- `data sin(pi/2)` - Trigonometry in radians
+- `data poly x^2 - 5x + 6` - Polynomial roots
+- `data roots x^2 + 1` - Polynomial roots with complex output
+- `data solve 2x^2 - 8 = 0` - Polynomial equation solving
+- `data plot x^2` - Plot a function
+- `data plot sin(x) from -2*pi to 2*pi` - Plot with a custom x range
+
+### Transformer NLP
+
+- `!summarize <text>` - Summarize long text
+- `!classify <text> | <label1>, <label2>` - Zero-shot classification
+- `!mask <text with [MASK]>` - Mask filling
 
 ## Installation
 
-### 1. Clone/Setup Repository
 ```bash
 cd Data_Collector_Bot
-```
-
-### 2. Create Virtual Environment (Optional but Recommended)
-```bash
-python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # macOS/Linux
-```
-
-### 3. Install Dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment
-Create a `.env` file in the project root:
+Create `.env`:
+
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
 ```
 
-## Configuration
+Run:
 
-Edit `config.py` to customize:
-- **Discord settings**: Token, prefix, etc.
-- **Database**: Database filename
-- **LLM settings**: Server URL, model path, temperature, tokens, etc.
-- **API endpoints**: Quote API, meme API URLs
-
-## Usage
-
-### Starting the Bot
 ```bash
 python main.py
 ```
 
-### Using Commands in Discord
-```
-!hello                          # Greeting
-!quote                          # Random quote
-!ask What is Python?            # Ask LLM
-!ask --tokens 256 --temp 0.5 Explain AI
-data save My important note     # Save data
-data get list                   # View saved data
-data curse                      # Get curse word
-```
+## Dependencies
 
-## Module Documentation
+- discord.py - Discord bot framework
+- requests - External API calls
+- python-dotenv - Environment variable loading
+- sympy - Symbolic parsing and polynomial roots
+- numpy - Plot sampling
+- matplotlib - Plot image generation
 
-### `core.database`
-Handles all database operations with `DatabaseManager` class:
-- `save_user_data(user_id, text)`
-- `get_user_data(user_id)`
-- `get_all_user_data()`
+## Module Notes
 
-### `core.api`
-Manages external APIs with `APIManager` class:
-- `get_random_quote()` - Fetches from ZenQuotes
-- `get_random_meme()` - Fetches from meme API
+### `handlers.calculator`
+Uses a safe AST evaluator for calculator expressions. It supports arithmetic, powers, square root, logs, trig, inverse trig, `pi`, and `e`.
 
-### `core.llm`
-LLM integration with `LLMManager` class:
-- `start_server()` - Start llama.cpp server
-- `ask_qwen(prompt, max_tokens, temperature)` - Query Qwen model
-- `parse_args(raw)` - Parse command arguments
+### `handlers.polynomial`
+Uses SymPy to parse and solve polynomial expressions or equations for `x`. It supports implicit multiplication such as `5x`.
 
-### `handlers.commands`
-Command processing:
-- `process_commands(message)` - Routes to appropriate handler
+### `handlers.plotter`
+Uses SymPy, NumPy, and Matplotlib to render functions as PNG files for Discord.
 
-### `handlers.events`
-Event processing:
-- `process_events(message)` - Handles message events
-
-## Adding New Commands
-
-1. Create handler in `handlers/commands.py`:
-```python
-@staticmethod
-async def handle_new_command(message: discord.Message) -> bool:
-    if message.content.startswith('!new'):
-        await message.channel.send('Response!')
-        return True
-    return False
-```
-
-2. Add to handlers list in `process_commands()`:
-```python
-handlers = [
-    CommandHandler.handle_new_command,
-    # ... other handlers
-]
-```
-
-## Adding New Responses
-
-Edit `utils/constants.py`:
-- Add words to `SAD_WORDS` list
-- Add responses to `ENCOURAGEMENT_MESSAGES`
-- Add triggers to `CUSTOM_RESPONSES` dict
+### `handlers.games`
+Contains `!guess` registration plus manual game commands like rock paper scissors.
 
 ## Testing
 
-Run tests:
+Run the current test module:
+
 ```bash
 python -m tests.test_meme_api
 ```
 
-## Dependencies
+Quick syntax check:
 
-See `requirements.txt` for all dependencies:
-- discord.py
-- requests
-- python-dotenv
+```bash
+python -m py_compile main.py handlers/calculator.py handlers/games.py handlers/plotter.py handlers/polynomial.py
+```
 
 ## Legacy Files
 
-- `words.py` - Kept for backward compatibility (use `utils/constants.py` instead)
-- `gwen.py` - Kept for reference (use `core/llm.py` instead)
-- `db_main.py` - Redundant, not needed (database setup in `core/database.py`)
+- `words.py` - Kept for backward compatibility
+- `gwen.py` - Kept for reference; use `core/llm.py` for current LLM code
 
 ## Troubleshooting
 
-### Bot doesn't respond
-- Check DISCORD_TOKEN in `.env`
-- Verify bot has message content intent enabled
-- Check if prefix is correct (`!` by default)
+### Bot does not respond
 
-### Database errors
-- Ensure write permissions in project directory
-- Check `database.db` isn't corrupted
+- Check `DISCORD_TOKEN` in `.env`
+- Verify the bot has message content intent enabled
+- Check the command prefix in `config.py`
 
-### LLM commands not working
-- Ensure llama.cpp server is running
-- Check `LLM_SERVER_URL` in config.py
-- Verify model file path exists
+### Plot or polynomial command fails
+
+- Run `pip install -r requirements.txt`
+- Confirm `sympy`, `numpy`, and `matplotlib` are installed
+- Use `x` as the function or polynomial variable
+
+### LLM commands do not work
+
+- Start the llama.cpp server with `data llm start`
+- Check `LLM_SERVER_URL` and model paths in `config.py`
 
 ## License
 
 Proprietary - All rights reserved
-
-## Contact
-
-For issues or questions, check the README or review individual module docstrings.

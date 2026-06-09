@@ -10,8 +10,7 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 COMMAND_PREFIX = "!"
 
-# Database Configuration
-DATABASE_NAME = "database.db"
+# Database configuration removed (no database used)
 
 # LLM Configuration
 LLM_SERVER_URL = "http://127.0.0.1:8080/v1/chat/completions"

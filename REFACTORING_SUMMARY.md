@@ -12,7 +12,7 @@ main.py (95 lines)              main.py (95 lines, cleaner)
 db_main.py (redundant)          config.py (centralized config)
 gwen.py (separate LLM)          core/
 words.py (loose constants)        ├── __init__.py
-randomtesting.py (test code)      ├── database.py (refactored)
+randomtesting.py (test code)      
                                   ├── api.py (new)
                                   └── llm.py (from gwen.py)
                                 handlers/
@@ -109,14 +109,14 @@ def test_api():
 # Answer: Scattered through main.py (lines 14-41)
 
 # AFTER: "Where's the database code?"
-# Answer: core/database.py (organized, documented)
+# Answer: No persistent database module; data persistence removed
 ```
 
 ## Files Created
 
 ### Core Modules (Business Logic)
 1. **config.py** - Central configuration (30 lines)
-2. **core/database.py** - Database manager (90 lines)
+2. (database module removed)
 3. **core/api.py** - API manager (50 lines)
 4. **core/llm.py** - LLM manager (200 lines)
 
@@ -147,7 +147,7 @@ def test_api():
 - ✅ **gwen.py** - Kept for reference
 - ✅ **randomtesting.py** - Kept for reference
 - ⚠️ **db_main.py** - Redundant, can be deleted
-- ✅ **database.db** - Data preserved
+- ✅ **database.db** - (removed or not used)
 
 ## All Functionality Preserved
 
@@ -155,14 +155,11 @@ def test_api():
 - ✅ `!hello` - Greeting
 - ✅ `!quote` - Random quote
 - ✅ `!ask` - LLM query (with flags)
-- ✅ `data save` - Save data
-- ✅ `data get list` - List data
 - ✅ `data curse` - Random curse word
 - ✅ Custom responses - All working
 
 ### Features
 - ✅ Encouragement for sad words
-- ✅ Database persistence
 - ✅ External API integration
 - ✅ LLM server management
 - ✅ Async/await event handling
@@ -182,7 +179,6 @@ python main.py
 # All commands work (same)
 !hello
 !quote
-data save something
 ```
 
 ## Next Steps
@@ -206,7 +202,7 @@ data save something
 - [ ] New APIs - add to core/api.py
 - [ ] New responses - edit utils/constants.py
 - [ ] New events - add to handlers/events.py
-- [ ] Database migration - add to core/database.py
+- [ ] Database migration - (no database in project)
 - [ ] Statistics/analytics - new core module
 - [ ] Admin commands - new handler class
 

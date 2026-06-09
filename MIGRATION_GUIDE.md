@@ -20,7 +20,6 @@ randomtesting.py     ← Random test script
 main.py              ← Clean entry point (~95 lines, much clearer)
 config.py            ← All configuration in one place
 core/
-  ├── database.py    ← Database operations (70 lines, reusable)
   ├── api.py         ← External APIs (50 lines, reusable)
   └── llm.py         ← LLM integration (180 lines, from gwen.py)
 handlers/
@@ -39,10 +38,7 @@ tests/
 - Easy to change settings without editing multiple files
 - Environment variables loaded with defaults
 
-### 2. **Database** (`core/database.py`)
-- Extracted: `get_quote()`, `get_saved_data()`, `get_data_list()`
-- Now a reusable `DatabaseManager` class
-- Can be imported and used in other modules
+NOTE: This project no longer includes a persistent database module; persistent data storage features have been removed.
 
 ### 3. **API Integration** (`core/api.py`)
 - Extracted API calls from main.py

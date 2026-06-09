@@ -5,10 +5,13 @@ A modular Discord bot for data collection, quotes, and LLM integration.
 import discord
 from discord.ext import commands
 from config import DISCORD_TOKEN, COMMAND_PREFIX
+from handlers.calculator import process_calculator_commands
 from handlers.commands import process_commands
 from handlers.events import process_events
+from handlers.games import process_game_commands, setup_game_commands
+from handlers.plotter import process_plot_commands
+from handlers.polynomial import process_polynomial_commands
 from handlers.transformers import process_transformer_commands
-from core.database import db_manager
 from core.llm import llm_manager
 
 
@@ -16,6 +19,7 @@ from core.llm import llm_manager
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
+setup_game_commands(bot)
 
 
 @bot.event
@@ -43,6 +47,14 @@ async def on_message(message: discord.Message):
     handled = await process_commands(message)
     if not handled:
         handled = await process_transformer_commands(message)
+    if not handled:
+        handled = await process_plot_commands(message)
+    if not handled:
+        handled = await process_polynomial_commands(message)
+    if not handled:
+        handled = await process_calculator_commands(message)
+    if not handled:
+        handled = await process_game_commands(message)
 
     await process_events(message)
 
