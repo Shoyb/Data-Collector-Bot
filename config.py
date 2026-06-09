@@ -24,11 +24,11 @@ LLM_MODEL_PATH = r"C:\llama\models\Qwen3.5-0.8B-Q4_K_M.gguf"
 LLM_SERVER_PATH = r"C:\llama\llama-server.exe"
 
 # Hugging Face API Configuration
+# api-inference.huggingface.co is deprecated — now using router.huggingface.co (handled in transformers_nlp.py)
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-HF_API_URL = "https://api-inference.huggingface.co/models"
-HF_SUMMARIZATION_MODEL = "facebook/bart-large-cnn"
-HF_CLASSIFICATION_MODEL = "facebook/bart-large-mnli"
-HF_MASKING_MODEL = "bert-base-uncased"
+HF_SUMMARIZATION_MODEL = "sshleifer/distilbart-cnn-12-6"   # fast ~300MB, replaces bart-large-cnn (1.6GB, times out)
+HF_CLASSIFICATION_MODEL = "facebook/bart-large-mnli"        # zero-shot classification
+HF_MASKING_MODEL = "google-bert/bert-base-uncased"          # correct model ID (bert-base-uncased is rejected)
 
 # External APIs Configuration
 ZENQUOTES_API_URL = "https://zenquotes.io/api/random"
