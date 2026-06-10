@@ -7,6 +7,8 @@ import requests
 import discord
 from core.api import api_manager
 from core.llm import llm_manager
+from handlers.help import process_help_commands
+from handlers.message import process_message_commands
 from utils.constants import CUSTOM_RESPONSES
 from words import swear_words
 
@@ -145,6 +147,8 @@ async def process_commands(message: discord.Message) -> bool:
     handlers = [
         CommandHandler.handle_hello,
         CommandHandler.handle_quote,
+        process_help_commands,
+        process_message_commands,
         CommandHandler.handle_data_curse,
         CommandHandler.handle_data_meme,
         CommandHandler.handle_data_waifu,

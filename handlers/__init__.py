@@ -6,6 +6,8 @@ from .games import process_game_commands, setup_game_commands
 from .plotter import process_plot_commands
 from .polynomial import process_polynomial_commands
 from .transformers import process_transformer_commands
+from .help import process_help_commands
+from .message import process_message_commands
 
 __all__ = [
     "process_calculator_commands",
@@ -15,5 +17,7 @@ __all__ = [
     "process_plot_commands",
     "process_polynomial_commands",
     "process_transformer_commands",
+    "process_help_commands",
+    "process_message_commands",
     "setup_game_commands",
 ]
