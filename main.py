@@ -11,6 +11,7 @@ from handlers.events import process_events
 from handlers.games import process_game_commands, setup_game_commands
 from handlers.plotter import process_plot_commands
 from handlers.polynomial import process_polynomial_commands
+from handlers.words import setup_word_commands
 from handlers.transformers import process_transformer_commands
 from core.llm import llm_manager
 
@@ -19,6 +20,7 @@ from core.llm import llm_manager
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
+setup_word_commands(bot) # Setup new word commands
 setup_game_commands(bot)
 
 

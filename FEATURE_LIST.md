@@ -1,4 +1,4 @@
-﻿# Complete Feature List
+﻿﻿# Complete Feature List
 
 ## Core Commands
 
@@ -35,6 +35,12 @@
 - `data plot <function>` - Plot a function and send a PNG image
 - `data graph <function>` - Same as `data plot`
 - `data plot <function> from <start> to <end>` - Plot with a custom x range
+
+### Word Tools
+- `!5letter` or `!fiveletter` - Find 5-letter words
+  - Optional: `--contains <letters>` (e.g., `abc` for words containing 'a', 'b', and 'c')
+  - Optional: `--pos <position:letter>` (e.g., `2:a 5:c` for 'a' in 2nd position, 'c' in 5th)
+  - Supports pagination with arrows for multiple results.
 
 ### AI/LLM Integration
 
@@ -106,6 +112,9 @@ data sqrt(81)
 data poly x^2 - 5x + 6
 data plot sin(x) from -2*pi to 2*pi
 !summarize [50+ word text]
+!5letter
+!5letter --contains ae
+!5letter --pos 1:s 5:e
 !classify [text] | positive, negative, neutral
 !mask The capital of France is [MASK]
 ```

@@ -89,6 +89,15 @@ COMMANDS = {
         "description": "Play a timed mental math challenge.",
         "usage": "`!mental`, `!mental 10`, `!mental hard`, or `!mental 10 hard`",
     },
+    "words": {
+        "display": "!words [include=abc] [pos2=a] [pos5=c]",
+        "description": "Find 5-letter words filtered by required letters and positions.",
+        "usage": (
+            "`!words`\n"
+            "`!words abc`\n"
+            "`!words include=abc pos2=a pos5=c`"
+        ),
+    },
     "connect4": {
         "display": "!connect4",
         "description": "Play Connect Four against the bot.",
@@ -124,6 +133,7 @@ ALIASES = {
     "mental": "mental",
     "mentalmath": "mental",
     "quickmath": "mental",
+    "words": "words",
     "connect4": "connect4",
     "c4": "connect4",
 }
@@ -152,6 +162,7 @@ def _build_summary() -> str:
         "message",
         "guess",
         "mental",
+        "words",
         "connect4",
     ):
         info = COMMANDS[key]

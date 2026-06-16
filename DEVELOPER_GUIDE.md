@@ -1,4 +1,4 @@
-﻿# Developer Quick Reference
+﻿﻿# Developer Quick Reference
 
 ## File Locations
 
@@ -13,6 +13,7 @@
 | Calculator | `handlers/calculator.py` | `calculate()`, `process_calculator_commands()` |
 | Polynomial solver | `handlers/polynomial.py` | `solve_polynomial()`, `process_polynomial_commands()` |
 | Plotter | `handlers/plotter.py` | `create_function_plot()`, `process_plot_commands()` |
+| Words | `handlers/words.py` | `setup_word_commands()`, `_load_five_letter_words()` |
 | Transformers | `handlers/transformers.py` | `process_transformer_commands()` |
 | Constants | `utils/constants.py` | `SAD_WORDS`, `ENCOURAGEMENT_MESSAGES`, etc. |
 | Entry | `main.py` | `bot`, `main()` |
